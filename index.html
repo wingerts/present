@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Wide Technology AI Native Engineering Bootcamp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .presentation-container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+            align-items: center;
+        }
+
+        .slide-content {
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slide-visual {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-visual::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .slide-visual::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite reverse;
+            top: 50px;
+            right: 50px;
+        }
+
+        .otter {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            opacity: 0.6;
+            z-index: 1;
+            animation: gentleFloat 4s ease-in-out infinite;
+            width: 250px;
+            height: 250px;
+        }
+
+        @keyframes gentleFloat {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px);
+            }
+            50% {
+                transform: translateY(-15px) translateX(5px);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(30px);
+            }
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .wwt-logo {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            z-index: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+            animation: fadeInDown 0.8s ease-out 0.2s both;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-weight: 600;
+            animation: fadeInDown 0.8s ease-out 0.4s both;
+        }
+
+        .bullet-points {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+
+        .bullet-point {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .bullet-marker {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: -2px;
+        }
+
+        .bullet-text {
+            flex: 1;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(10px);
+            }
+        }
+
+        .scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            stroke: #667eea;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .slide {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .slide-content {
+                padding: 40px;
+            }
+
+            .slide-visual {
+                min-height: 300px;
+            }
+
+            h1 {
+                font-size: 36px;
+            }
+
+            .subtitle {
+                font-size: 20px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .bullet-points {
+                gap: 12px;
+            }
+
+            .bullet-point {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="slide">
+            <div class="slide-content">
+                <h1>World Wide Technology</h1>
+                <div class="subtitle">AI Native Engineering Bootcamp</div>
+
+                <div class="bullet-points">
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">What I would do different</span>
+                    </div>
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">Surprises</span>
+                    </div>
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">Things that strayed from the spec</span>
+                    </div>
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">Developer thoughts</span>
+                    </div>
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">Demo</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-visual">
+                <svg class="otter" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" width="250" height="250">
+                    <!-- Otter body -->
+                    <ellipse cx="100" cy="130" rx="55" ry="65" fill="#8B6F47"/>
+                    <!-- Otter belly -->
+                    <ellipse cx="100" cy="140" rx="40" ry="50" fill="#D4A574"/>
+                    <!-- Otter head -->
+                    <circle cx="100" cy="50" r="45" fill="#8B6F47"/>
+                    <!-- Otter ears -->
+                    <circle cx="70" cy="15" r="15" fill="#8B6F47"/>
+                    <circle cx="130" cy="15" r="15" fill="#8B6F47"/>
+                    <!-- Inner ears -->
+                    <circle cx="70" cy="18" r="8" fill="#D4A574"/>
+                    <circle cx="130" cy="18" r="8" fill="#D4A574"/>
+                    <!-- Otter snout -->
+                    <ellipse cx="100" cy="60" rx="25" ry="20" fill="#D4A574"/>
+                    <!-- Otter nose -->
+                    <circle cx="100" cy="60" r="6" fill="#333"/>
+                    <!-- Otter eyes -->
+                    <circle cx="85" cy="40" r="7" fill="#333"/>
+                    <circle cx="115" cy="40" r="7" fill="#333"/>
+                    <!-- Eye shine -->
+                    <circle cx="86" cy="39" r="2" fill="white"/>
+                    <circle cx="116" cy="39" r="2" fill="white"/>
+                    <!-- Whiskers -->
+                    <line x1="60" y1="55" x2="30" y2="50" stroke="#333" stroke-width="1.5"/>
+                    <line x1="60" y1="65" x2="30" y2="70" stroke="#333" stroke-width="1.5"/>
+                    <line x1="140" y1="55" x2="170" y2="50" stroke="#333" stroke-width="1.5"/>
+                    <line x1="140" y1="65" x2="170" y2="70" stroke="#333" stroke-width="1.5"/>
+                    <!-- Otter tail -->
+                    <path d="M 50 160 Q 20 180 15 150" stroke="#8B6F47" stroke-width="22" fill="none" stroke-linecap="round"/>
+                    <!-- Otter front paws -->
+                    <ellipse cx="75" cy="185" rx="18" ry="25" fill="#8B6F47"/>
+                    <ellipse cx="125" cy="185" rx="18" ry="25" fill="#8B6F47"/>
+                    <!-- Paw pads -->
+                    <ellipse cx="75" cy="195" rx="12" ry="8" fill="#D4A574"/>
+                    <ellipse cx="125" cy="195" rx="12" ry="8" fill="#D4A574"/>
+                </svg>
+                <svg class="wwt-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <!-- WWT Logo -->
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:white;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f0f0f0;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Outer circle -->
+                    <circle cx="100" cy="100" r="95" fill="none" stroke="white" stroke-width="2" opacity="0.3"/>
+                    <!-- WWT Text in geometric style -->
+                    <text x="100" y="110" font-size="72" font-weight="bold" text-anchor="middle" fill="white" font-family="Arial, sans-serif">WWT</text>
+                    <!-- Subtitle -->
+                    <text x="100" y="145" font-size="16" text-anchor="middle" fill="white" font-family="Arial, sans-serif" opacity="0.9">AI Native</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown' || e.key === ' ') {
+                window.scrollBy(0, window.innerHeight);
+            } else if (e.key === 'ArrowUp') {
+                window.scrollBy(0, -window.innerHeight);
+            }
+        });
+    </script>
+</body>
+</html>
