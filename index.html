@@ -146,37 +146,33 @@
             animation: fadeInUp 0.8s ease-out 0.6s both;
         }
 
-        .features {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        .bullet-points {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
             margin-bottom: 40px;
             animation: fadeInUp 0.8s ease-out 0.8s both;
         }
 
-        .feature {
+        .bullet-point {
             display: flex;
             align-items: flex-start;
             gap: 12px;
-        }
-
-        .feature-icon {
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .feature-text {
-            font-size: 14px;
+            font-size: 16px;
             color: #555;
+            line-height: 1.6;
+        }
+
+        .bullet-marker {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: -2px;
+        }
+
+        .bullet-text {
+            flex: 1;
         }
 
         @keyframes fadeInDown {
@@ -252,6 +248,14 @@
             .features {
                 grid-template-columns: 1fr;
             }
+
+            .bullet-points {
+                gap: 12px;
+            }
+
+            .bullet-point {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -267,22 +271,22 @@
                     real-world projects that matter in the enterprise AI landscape.
                 </p>
 
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Expert-led training</div>
+                <div class="bullet-points">
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">What I would do different</span>
                     </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Hands-on projects</div>
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">Surprises</span>
                     </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Industry connections</div>
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">Things that strayed from the spec</span>
                     </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">Career support</div>
+                    <div class="bullet-point">
+                        <span class="bullet-marker">•</span>
+                        <span class="bullet-text">Developer thoughts</span>
                     </div>
                 </div>
             </div>
