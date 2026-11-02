@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTL-SDR Spectrum and Waterfall</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4caf50;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        input[type="text"], input[type="number"] {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .spectrum-container, .waterfall-container {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        
+        canvas {
+            background-color: #000;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .connected {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .disconnected {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RTL-SDR Spectrum and Waterfall Viewer</h1>
+        
+        <div class="status disconnected" id="status">Disconnected from rtl-tcp server</div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="server">Server Address:</label>
+                <input type="text" id="server" value="localhost">
+            </div>
+            
+            <div class="control-group">
+                <label for="port">Port:</label>
+                <input type="number" id="port" value="1234" min="1" max="65535">
+            </div>
+            
+            <div class="control-group">
+                <label for="freq">Frequency (MHz):</label>
+                <input type="number" id="freq" value="100" min="1" step="0.01">
+            </div>
+            
+            <div class="control-group">
+                <label for="gain">Gain:</label>
+                <input type="number" id="gain" value="20" min="0" step="0.1">
+            </div>
+            
+            <button id="connectBtn">Connect</button>
+            <button id="disconnectBtn">Disconnect</button>
+        </div>
+        
+        <div class="visualization">
+            <div class="spectrum-container">
+                <h2>Spectrum</h2>
+                <div class="canvas-container">
+                    <canvas id="spectrumCanvas"></canvas>
+                </div>
+                <div class="info">
+                    <span id="currentFreq">Frequency: 100.00 MHz</span>
+                    <span id="currentGain">Gain: 20.0 dB</span>
+                </div>
+            </div>
+            
+            <div class="waterfall-container">
+                <h2>Waterfall</h2>
+                <div class="canvas-container">
+                    <canvas id="waterfallCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let ws = null;
+        let spectrumCtx = null;
+        let waterfallCtx = null;
+        let spectrumCanvas = null;
+        let waterfallCanvas = null;
+        let dataBuffer = [];
+        let isRunning = false;
+        let lastUpdateTime = 0;
+        let updateInterval = 100; // ms
+        
+        // DOM elements
+        const statusElement = document.getElementById('status');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const serverInput = document.getElementById('server');
+        const portInput = document.getElementById('port');
+        const freqInput = document.getElementById('freq');
+        const gainInput = document.getElementById('gain');
+        const currentFreqElement = document.getElementById('currentFreq');
+        const currentGainElement = document.getElementById('currentGain');
+        
+        // Initialize the application
+        function init() {
+            // Setup canvas contexts
+            spectrumCanvas = document.getElementById('spectrumCanvas');
+            waterfallCanvas = document.getElementById('waterfallCanvas');
+            
+            spectrumCtx = spectrumCanvas.getContext('2d');
+            waterfallCtx = waterfallCanvas.getContext('2d');
+            
+            // Set canvas sizes
+            resizeCanvases();
+            
+            // Add event listeners
+            connectBtn.addEventListener('click', connectToServer);
+            disconnectBtn.addEventListener('click', disconnectFromServer);
+            
+            window.addEventListener('resize', resizeCanvases);
+            
+            // Initialize with default values
+            updateCurrentInfo();
+        }
+        
+        // Resize canvases when window size changes
+        function resizeCanvases() {
+            if (spectrumCanvas && waterfallCanvas) {
+                spectrumCanvas.width = spectrumCanvas.offsetWidth;
+                spectrumCanvas.height = spectrumCanvas.offsetHeight;
+                waterfallCanvas.width = waterfallCanvas.offsetWidth;
+                waterfallCanvas.height = waterfallCanvas.offsetHeight;
+            }
+        }
+        
+        // Update current information display
+        function updateCurrentInfo() {
+            currentFreqElement.textContent = `Frequency: ${freqInput.value} MHz`;
+            currentGainElement.textContent = `Gain: ${gainInput.value} dB`;
+        }
+        
+        // Connect to the rtl-tcp server
+        function connectToServer() {
+            const server = serverInput.value;
+            const port = portInput.value;
+            
+            // Close existing connection if any
+            if (ws) {
+                ws.close();
+            }
+            
+            try {
+                const wsUrl = `ws://${server}:${port}`;
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = function(event) {
+                    statusElement.textContent = `Connected to rtl-tcp server at ${server}:${port}`;
+                    statusElement.className = 'status connected';
+                    isRunning = true;
+                    updateCurrentInfo();
+                    // Start fetching data
+                    fetchData();
+                };
+                
+                ws.onmessage = function(event) {
+                    if (event.data instanceof ArrayBuffer) {
+                        // Handle binary data
+                        processSpectrumData(event.data);
+                    }
+                };
+                
+                ws.onclose = function(event) {
+                    statusElement.textContent = 'Disconnected from rtl-tcp server';
+                    statusElement.className = 'status disconnected';
+                    isRunning = false;
+                };
+                
+                ws.onerror = function(error) {
+                    statusElement.textContent = 'Connection error';
+                    statusElement.className = 'status disconnected';
+                    console.error('WebSocket error:', error);
+                };
+            } catch (error) {
+                statusElement.textContent = 'Failed to connect to server';
+                statusElement.className = 'status disconnected';
+                console.error('Connection error:', error);
+            }
+        }
+        
+        // Disconnect from the rtl-tcp server
+        function disconnectFromServer() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                isRunning = false;
+            }
+        }
+        
+        // Process spectrum data from rtl-tcp
+        function processSpectrumData(data) {
+            const uint8Array = new Uint8Array(data);
+            // This would typically process the data from rtl-tcp
+            // For now, we'll simulate with some dummy data to test visualization
+            simulateSpectrumData(uint8Array);
+        }
+        
+        // Simulate spectrum data for testing purposes
+        function simulateSpectrumData(data) {
+            // For demo purposes, we'll generate synthetic data
+            const bufferSize = Math.min(1024, data.length);
+            const spectrumData = new Float32Array(bufferSize);
+            
+            // Generate some realistic-looking spectrum data
+            for (let i = 0; i < bufferSize; i++) {
+                // Create some peaks and noise
+                const base = 50 + Math.sin(i * 0.05) * 10 + Math.random() * 20;
+                const peak1 = Math.max(0, 100 - Math.pow((i - 300) / 50, 2));
+                const peak2 = Math.max(0, 100 - Math.pow((i - 700) / 100, 2));
+                const peak3 = Math.max(0, 80 - Math.pow((i - 500) / 30, 2));
+                
+                spectrumData[i] = base + peak1 + peak2 + peak3;
+            }
+            
+            // Update the visualization
+            drawSpectrum(spectrumData);
+            addWaterfallData(spectrumData);
+        }
+        
+        // Draw the spectrum visualization
+        function drawSpectrum(data) {
+            if (!spectrumCtx || data.length === 0) return;
+            
+            const width = spectrumCanvas.width;
+            const height = spectrumCanvas.height;
+            
+            // Clear canvas
+            spectrumCtx.clearRect(0, 0, width, height);
+            
+            // Draw background
+            spectrumCtx.fillStyle = '#000';
+            spectrumCtx.fillRect(0, 0, width, height);
+            
+            // Draw grid lines
+            spectrumCtx.strokeStyle = '#333';
+            spectrumCtx.lineWidth = 1;
+            
+            // Horizontal grid lines
+            for (let y = 0; y <= height; y += 50) {
+                spectrumCtx.beginPath();
+                spectrumCtx.moveTo(0, y);
+                spectrumCtx.lineTo(width, y);
+                spectrumCtx.stroke();
+            }
+            
+            // Vertical grid lines
+            for (let x = 0; x <= width; x += 50) {
+                spectrumCtx.beginPath();
+                spectrumCtx.moveTo(x, 0);
+                spectrumCtx.lineTo(x, height);
+                spectrumCtx.stroke();
+            }
+            
+            // Draw spectrum data
+            spectrumCtx.strokeStyle = '#4caf50';
+            spectrumCtx.lineWidth = 2;
+            spectrumCtx.beginPath();
+            
+            const step = data.length / width;
+            
+            for (let i = 0; i < width; i++) {
+                const value = data[Math.floor(i * step)];
+                const y = height - (value / 150) * height;
+                
+                if (i === 0) {
+                    spectrumCtx.moveTo(i, y);
+                } else {
+                    spectrumCtx.lineTo(i, y);
+                }
+            }
+            
+            spectrumCtx.stroke();
+            
+            // Draw frequency labels
+            spectrumCtx.fillStyle = '#aaa';
+            spectrumCtx.font = '12px Arial';
+            spectrumCtx.textAlign = 'center';
+            
+            const freqStart = parseFloat(freqInput.value);
+            const freqStep = 10; // MHz
+            for (let i = 0; i <= 10; i++) {
+                const x = (i / 10) * width;
+                const freq = freqStart + i * freqStep;
+                spectrumCtx.fillText(`${freq.toFixed(1)} MHz`, x, height - 5);
+            }
+            
+            // Draw amplitude labels
+            spectrumCtx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const y = (i / 5) * height;
+                const amplitude = 100 - i * 20;
+                spectrumCtx.fillText(`${amplitude} dB`, width - 5, y + 5);
+            }
+        }
+        
+        // Add data to waterfall
+        function addWaterfallData(data) {
+            if (!waterfallCtx || data.length === 0) return;
+            
+            // Add data to buffer
+            dataBuffer.push(data);
+            
+            // Keep only the last 100 rows
+            if (dataBuffer.length > 100) {
+                dataBuffer.shift();
+            }
+            
+            // Update waterfall
+            drawWaterfall();
+        }
+        
+        // Draw the waterfall visualization
+        function drawWaterfall() {
+            if (!waterfallCtx || dataBuffer.length === 0) return;
+            
+            const width = waterfallCanvas.width;
+            const height = waterfallCanvas.height;
+            const bufferHeight = dataBuffer.length;
+            
+            // Clear canvas
+            waterfallCtx.clearRect(0, 0, width, height);
+            
+            // Draw each row of data
+            const rowHeight = height / bufferHeight;
+            
+            for (let row = 0; row < bufferHeight; row++) {
+                const data = dataBuffer[row];
+                const y = row * rowHeight;
+                const rowHeightActual = Math.min(rowHeight, height - y);
+                
+                if (rowHeightActual <= 0) continue;
+                
+                // Draw one horizontal line per row
+                const step = data.length / width;
+                for (let i = 0; i < width; i++) {
+                    const value = data[Math.floor(i * step)];
+                    // Convert dB value to color (blue to red gradient)
+                    const intensity = Math.min(1, value / 150);
+                    const r = Math.floor(255 * intensity);
+                    const g = Math.floor(255 * (1 - Math.abs(intensity - 0.5) * 2));
+                    const b = Math.floor(255 * (1 - intensity));
+                    
+                    waterfallCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    waterfallCtx.fillRect(i, y, 1, rowHeightActual);
+                }
+            }
+        }
+        
+        // Main loop for fetching data
+        function fetchData() {
+            if (!isRunning) return;
+            
+            const now = Date.now();
+            if (now - lastUpdateTime > updateInterval) {
+                // In a real implementation, we would request new data from the server here
+                // For demo purposes, we'll just generate some simulated data
+                simulateSpectrumData(new Uint8Array(1024));
+                lastUpdateTime = now;
+            }
+            
+            requestAnimationFrame(fetchData);
+        }
+        
+        // Initialize the application when the page loads
+        window.onload = init;
+        
+        // Update info when inputs change
+        freqInput.addEventListener('input', updateCurrentInfo);
+        gainInput.addEventListener('input', updateCurrentInfo);
+    </script>
+</body>
+</html>
